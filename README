@@ -8,4 +8,16 @@ This library allows you to locally rename CL packages.
 The package-renaming library creates a package PACKAGE-RENAMING,
 that exports the following macros and functions:
 
-(TO DO: document it)
+
+==== TO DO ====
+
+1- document it
+
+2- write tests
+
+3- document how to use it with ASDF
+
+4- make it work when there are non-trivial overlaps
+  between old names and new names
+
+5- write more tests

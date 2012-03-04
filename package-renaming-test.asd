@@ -4,4 +4,4 @@
   :description "testing package-renaming"
   :depends-on (:package-renaming :hu.dwim.stefil)
   :components
-  ((:file "package-renaming")))
+  ((:file "package-renaming-test")))
