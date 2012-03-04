@@ -39,11 +39,14 @@ specified by PACKAGE-DESIGNATOR or no package at all"
   (values))
 
 (defun package-names (package-designator)
+  "List of the designated package's name and nicknames"
   (let ((package (find-package package-designator)))
     (when package
       (cons (package-name package) (package-nicknames package)))))
 
 (defun find-package-from-names (names &key if-does-not-exist)
+  "Find the first package designated by one of the NAMES.
+IF-DOES-NOT-EXIST may be NIL or ERROR."
   (let ((package (some #'find-package names)))
     (or package
         (ecase if-does-not-exist
@@ -51,6 +54,10 @@ specified by PACKAGE-DESIGNATOR or no package at all"
           ((error) (error "No package named any of ~S" names))))))
 
 (defun effect-package-renaming (old new &key if-does-not-exist)
+  "Effect the renaming of a package with OLD names (designator or list of designators)
+to NEW names (a designator or list of designators).
+Return the list of actual names that the package had.
+IF-DOES-NOT-EXIST may be NIL or ERROR."
   (let* ((old-names (mapcar #'string (ensure-list old)))
          (new-names (mapcar #'string (ensure-list new)))
          (package (find-package-from-names
@@ -63,12 +70,22 @@ specified by PACKAGE-DESIGNATOR or no package at all"
         previous-names))))
 
 (defun effect-package-renamings (package-renamings &key if-does-not-exist)
+  "Call effect-package-renaming on each renaming.
+Return a list of reverse renamings to undo the thing.
+IF-DOES-NOT-EXIST may be NIL or ERROR;
+in the former case, the reverse renaming will rename
+the possibly newly created package to the \"old\" name."
+  ;; TODO: checking before effect, to avoid half-done operations
   (reverse
    (loop :for (old new) :in package-renamings
      :collect (list new (or (effect-package-renaming
                              old new :if-does-not-exist if-does-not-exist) old)))))
 
 (defun call-with-package-renamings (package-renamings thunk &key if-does-not-exist)
+  "Call the THUNK in an dynamic environment where
+the PACKAGE-RENAMINGS have been effected by effect-package-renamings,
+and are undone in the end by the same
+using the reverse renamings returned by the first call."
   (let ((reverse-renamings
          (effect-package-renamings package-renamings
                                    :if-does-not-exist if-does-not-exist)))
@@ -78,6 +95,10 @@ specified by PACKAGE-DESIGNATOR or no package at all"
                                 :if-does-not-exist if-does-not-exist))))
 
 (defmacro with-package-renamings ((package-renamings &key if-does-not-exist) &body body)
+  "Evaluate the BODY in an dynamic environment where
+the PACKAGE-RENAMINGS have been effected by effect-package-renamings,
+and are undone in the end by the same
+using the reverse renamings returned by the first call."
   `(call-with-package-renamings
     ,package-renamings #'(lambda () ,@body) :if-does-not-exist ,if-does-not-exist))
 

@@ -8,6 +8,16 @@ This library allows you to locally rename CL packages.
 The package-renaming library creates a package PACKAGE-RENAMING,
 that exports the following macros and functions:
 
+check-same-package-names
+check-package-candidate-names
+package-names
+find-package-from-names
+effect-package-renaming
+effect-package-renamings
+call-with-package-renamings
+with-package-renamings
+
+NB: All this is only safe when package operations are single-threaded.
 
 ==== TO DO ====
 
