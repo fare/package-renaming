@@ -17,7 +17,7 @@ effect-package-renamings
 call-with-package-renamings
 with-package-renamings
 
-A typical use would be to
+A typical use would be to use the following in your .asd file:
 
 (defun my-renamings (thunk)
   (package-renaming:call-with-package-renamings '((:foo (:bar :baz)) (:quux :quuux)) thunk))
