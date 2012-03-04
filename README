@@ -17,6 +17,15 @@ effect-package-renamings
 call-with-package-renamings
 with-package-renamings
 
+A typical use would be to
+
+(defun my-renamings (thunk)
+  (package-renaming:call-with-package-renamings '((:foo (:bar :baz)) (:quux :quuux)) thunk))
+(asdf:defsystem blah
+  :around-compile my-renamings
+  ...)
+
+
 NB: All this is only safe when package operations are single-threaded.
 
 ==== TO DO ====
