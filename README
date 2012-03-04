@@ -1,0 +1,11 @@
+PACKAGE-RENAMING
+
+This library allows you to locally rename CL packages.
+
+
+==== Exported Functionality ====
+
+The package-renaming library creates a package PACKAGE-RENAMING,
+that exports the following macros and functions:
+
+(TO DO: document it)

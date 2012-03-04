@@ -1,0 +1,5 @@
+#+xcvb
+(module
+ (:fullname "package-renaming"
+  :depends-on ("package-renaming")
+  :supersedes-asdf ("package-renaming")))
