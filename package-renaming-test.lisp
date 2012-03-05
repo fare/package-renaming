@@ -8,7 +8,7 @@
 (declaim (optimize (speed 1) (debug 3) (space 3)))
 
 (defsuite* (test-suite
-            :in root-suite
+            :in stefil:root-suite ;; THIS safely test the package renaming in our .asd
             :documentation "Testing package renaming"))
 
 (deftest test-renaming ()

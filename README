@@ -14,19 +14,93 @@ package-names
 find-package-from-names
 effect-package-renaming
 effect-package-renamings
-call-with-package-renamings
-with-package-renamings
+call-with-effective-package-renamings
+with-effective-package-renamings
 
-A typical use would be to use the following in your .asd file:
+NB: any kind of package renaming is only safe when package operations
+(including any use of the Lisp reader) are single-threaded.
 
-(defun my-renamings (thunk)
-  (package-renaming:call-with-package-renamings '((:foo (:bar :baz)) (:quux :quuux)) thunk))
-(asdf:defsystem blah
-  :around-compile my-renamings
+
+==== Compile-time renaming via ASDF ====
+
+with-effective-package-renamings and call-with-effective-package-renamings
+are pretty low-level primitives that let you do what you need,
+but require you to do a lot of the groundwork.
+
+First, an important constraint to understand about building CL software.
+By intentional design, ASDF only has an :around-compile hook,
+but no :around-load hook around load,
+or :around-build hook around both compile and load;
+indeed, some implementations that rely on linking, such as ECL or GCL,
+might not even allow any kind of useful hook around loading,
+and some things one might want to do with fasls
+(such as linking or concatenating them together into a big fasl)
+might preclude any such hook.
+Therefore, whatever renamings you do at compile-time
+will NOT be done available at load-time.
+When the fasl is loaded, only the non-renamed names are available,
+and symbols, stored with the principal name of their package at compile-time,
+will be resolved against the set of packages at load-time.
+This imposes this important constraint on renamings that are admissible
+in ASDF's :around-compile hook:
+	THE (PRINCIPAL) NAME OF A PACKAGE AS RENAMED AT COMPILE-TIME
+	*MUST* BE ONE OF THE NAMES OF THAT PACKAGE AT LOAD-TIME.
+
+For instance, if your target package is COM.FOO.BLAH
+and has nicknames CFBLAH and BLAH,
+then during your rename, the main name of the package must be one of
+COM.FOO.BLAH, CFBLAH or BLAH,
+or the symbols will fail to resolve properly at load-time.
+You can add as many new local nicknames as you want, and use them locally
+in your files, you cannot delete all the original names,
+and you must use the original names in any operation that will happen
+at runtime or load-time, such as defpackage or find-symbol.
+
+Now, if you want to use package-renaming
+to locally override a package A with another B,
+it is still possible; but you have to use further tricks.
+The trick is to somehow ADD a new unique non-clashing nickname
+to each of the packages that are involved in a clash,
+at some point after they are defined and before they are used by your code.
+For instance, give A the nickname A.at.runtime and B the nickname B.at.runtime.
+Then, you can make B.at.runtime the principal name
+of whatever renaming you make that targets B,
+even with local nickname A,
+whereas A is previously renamed away to A.at.runtime.
+
+With this constraint in mind,
+a typical way to use package-renaming would be
+to use the following in your my-system.asd file:
+
+(defsystem my-system
+  :depends-on (:my-system-meta)
+  :around-compile "my-system-meta::call-with-renamings"
   ...)
 
+And in B-renaming.asd:
+  
+(defsystem my-system-meta
+  :depends-on (:package-renaming)
+  :components ((:file "renamings")))
 
-NB: All this is only safe when package operations are single-threaded.
+And in renamings.lisp:
+
+(defpackage :my-system-meta (:use :cl :package-renaming))
+
+(effect-package-renaming
+  '((:A (:A :A.regular.nick :A.at.runtime))
+    (:B (:B :B.regular.nick :B.at.runtime))))
+
+(defun with-renamings (thunk)
+  (call-with-package-renamings
+    '((:A :A.at.runtime)
+      (:B :B.at.runtime :A :B.other.nick))
+    thunk))
+
+That's not all that simple, but at least it's possible.
+If you implement an easier all-in-one solution based on this,
+I'll happily merge it into this package-renaming.
+
 
 ==== TO DO ====
 
