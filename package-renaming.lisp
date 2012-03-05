@@ -9,8 +9,8 @@
    #:find-package-from-names
    #:effect-package-renaming
    #:effect-package-renamings
-   #:call-with-package-renamings
-   #:with-package-renamings))
+   #:call-with-effective-package-renamings
+   #:with-effective-package-renamings))
 
 (in-package :package-renaming)
 
@@ -81,7 +81,7 @@ the possibly newly created package to the \"old\" name."
      :collect (list new (or (effect-package-renaming
                              old new :if-does-not-exist if-does-not-exist) old)))))
 
-(defun call-with-package-renamings (package-renamings thunk &key if-does-not-exist)
+(defun call-with-effective-package-renamings (package-renamings thunk &key if-does-not-exist)
   "Call the THUNK in an dynamic environment where
 the PACKAGE-RENAMINGS have been effected by effect-package-renamings,
 and are undone in the end by the same
@@ -94,12 +94,13 @@ using the reverse renamings returned by the first call."
       (effect-package-renamings reverse-renamings
                                 :if-does-not-exist if-does-not-exist))))
 
-(defmacro with-package-renamings ((package-renamings &key if-does-not-exist) &body body)
+(defmacro with-effective-package-renamings (package-renamings &body body)
   "Evaluate the BODY in an dynamic environment where
 the PACKAGE-RENAMINGS have been effected by effect-package-renamings,
 and are undone in the end by the same
-using the reverse renamings returned by the first call."
-  `(call-with-package-renamings
-    ,package-renamings #'(lambda () ,@body) :if-does-not-exist ,if-does-not-exist))
+using the reverse renamings returned by the first call.
+PACKAGE-RENAMINGS is a compile-time constant;
+for runtime-computed renamings, use the call-with-effective-package-renamings function."
+  `(call-with-effective-package-renamings ',package-renamings #'(lambda () ,@body)))
 
 );eval-when
