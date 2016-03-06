@@ -78,7 +78,7 @@ to use the following in your my-system.asd file:
   ...)
 
 And in B-renaming.asd:
-  
+
 (defsystem my-system-meta
   :depends-on (:package-renaming)
   :components ((:file "renamings")))
